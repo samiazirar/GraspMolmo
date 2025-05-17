@@ -6,8 +6,10 @@ Code and website for "GraspMolmo: Generalizable Task-Oriented Grasping via Large
 
 ![Teaser figure for GraspMolmo](assets/teaser_transparent.png)
 
-## Data Download
-
 ## Model Download
 
+Coming soon!
+
 ## Setup
+
+Code and setup instructions coming soon!
