@@ -1,0 +1,11 @@
+data_dir: "???"
+out_dir: "???"
+seed: 42
+blacklist: asset_blacklist.txt
+all_categories_path: all_categories.txt
+test_frac: 0.1  # fraction of instances per category to use for testing
+test_categories:
+  - Teacup
+  - Fork
+  - DSLRCamera
+  - PillBottle

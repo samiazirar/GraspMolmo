@@ -1,0 +1,47 @@
+# Scene generation configuration parameters
+
+data_dir: "???"
+out_dir: "???"
+n_proc: 32
+n_samples: 10000
+blacklist: asset_blacklist.txt
+split_file:  # null to use all data
+
+annotation_sources:
+  # - type: s3
+  #   params:
+  #     bucket_name: "prior-datasets"
+  #     annotation_prefix: "semantic-grasping/annotations-filtered/"
+  - type: directory
+    params:
+      dir: /annotations
+
+datagen:
+  # Room parameters
+  min_wall_dist: 2.0  # meters
+  room_width_range: [4.0, 10.0]  # meters
+  room_depth_range: [4.0, 10.0]  # meters
+
+  # Camera parameters
+  cam_dfov_range: [60.0, 110.0]  # degrees
+  cam_dist_range: [0.25, 1.25]  # meters
+  cam_pitch_perturb: 0.02  # as fraction of fov
+  cam_yaw_perturb: 0.05  # as fraction of fov
+  cam_roll_perturb: 0.39269908169872414  # radians
+  cam_elevation_range: [0.39269908169872414, 1.0471975511965976]  # radians, pi/8 to pi/3
+
+  # Image parameters
+  img_size: [480, 640]  # (height, width)
+  n_views: 10
+  min_annots_per_view: 2
+
+  # Object parameters
+  n_objects_range: [6, 12]
+  n_background_range: [0, 0]
+  max_grasp_dist: 1.0  # meters
+
+  # Lighting parameters
+  color_temp_range: [2000.0, 10000.0]  # kelvin
+  light_intensity_range: [10.0, 25.0]
+  light_azimuth_range: [0.0, 6.283185307179586]  # radians, 0 to 2pi
+  light_inclination_range: [0.0, 1.0471975511965976]  # radians, 0 to pi/3

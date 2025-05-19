@@ -1,0 +1,5 @@
+scene_dir: "???"
+out_dir: "???"
+n_proc: 16
+img_size: [480, 640]  # (height, width)
+estimate_normals: false
