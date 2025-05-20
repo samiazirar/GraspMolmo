@@ -1,6 +1,6 @@
 # GraspMolmo
 
-[[Project Website]](https://abhaybd.github.io/GraspMolmo/) [[Data]](DATA.md) [[Model Weights]](#model-download)
+[[Paper]](https://arxiv.org/pdf/2505.13441) [[arXiv]](https://arxiv.org/abs/2505.13441) [[Project Website]](https://abhaybd.github.io/GraspMolmo/) [[Data]](DATA.md) [[Model Weights]](#model-download)
 
 Code and website for "GraspMolmo: Generalizable Task-Oriented Grasping via Large-Scale Synthetic Data Generation"
 
