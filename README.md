@@ -12,4 +12,6 @@ Coming soon!
 
 ## Setup
 
-Code and setup instructions coming soon!
+Using a virtualenv (e.g. conda) is highly recommended! This code is tested on Python 3.11, but likely works on other versions.
+
+This codebase can be installed with `pip install -e .`. See [DATA.md](DATA.md) to understand the released data and how to generate more, if needed.

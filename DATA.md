@@ -5,6 +5,10 @@ The PRISM dataset is available for download:
 - [PRISM-Test](https://pub-3e61ad92c7024712b84e4bf8658147f7.r2.dev/PRISM_test.tar)
 - [Splits](https://pub-3e61ad92c7024712b84e4bf8658147f7.r2.dev/PRISM_splits.tar) (train/test split of each object instance in each class)
 
+If you want to generate new scenes, the following data is required:
+- [Grasp Descriptions](https://pub-3e61ad92c7024712b84e4bf8658147f7.r2.dev/annotations.tar.gz) (natural-language descriptions of each grasp)
+- [Tasks JSON](https://pub-3e61ad92c7024712b84e4bf8658147f7.r2.dev/tasks.json) (generated tasks and grasps that would accomplish them)
+
 ## Data Overview
 
 Each of the above splits contains:
@@ -55,7 +59,13 @@ Each `scene.pkl` contains a dictionary with the following structure:
 
 ### Rendering observations
 
-Notably, this data does not include the rendered views, for the purposes of space-saving. These views can be rendered using `generate_obs.py`, which will generate downstream information from the scene data. Each scene will result in a single `<scene_id>.hdf5` file, with the following structure:
+Notably, this data does not include the rendered views, for the purposes of space-saving. These views can be rendered with:
+
+```bash
+python graspmolmo/datagen/generate_obs.py scene_dir=<path_to_data> out_dir=<output_path>
+```
+
+This will generate downstream information from the scene data. Each scene will result in a single `<scene_id>.hdf5` file, with the following structure:
 
 ```
 view_<i>/
@@ -88,6 +98,23 @@ matching_grasp_desc: The matched grasp description, which is the same as <view_i
 ```
 
 The rows of this CSV are the samples of the dataset.
+
+## Generating new data
+
+New data can be generated if desired. Doing so requires setting up the full datagen pipeline.
+
+1. First, we need to prepare the 3D assets and stable grasps
+    1. Download the [ACRONYM grasps](https://drive.google.com/file/d/1OjykLD9YmnFdfYpH2qO8yBo-I-22vKwu/view?usp=sharing) and extract to `<acronym_dir>`
+    2. Download the [ShapeNetSem meshes](https://www.shapenet.org/) and place in `<shapenet_dir>`
+    3. Run `python graspmolmo/preprocess_shapenet.py <acronym_dir>/grasps <shapenet_dir> <processed_dir> --blacklist asset_blacklist.txt --sampling-categories-file all_categories.txt`
+2. Download the grasp descriptions from above and extract to `<annots_dir>`
+3. Download the task JSON from above and place at `<tasks_json_path>`
+4. Modify the variables at the top of `scripts/datagen_pipeline.sh` as required:
+    1. `DATASET_PATH` is the root of the outputted files
+    2. `ASSETS_PATH` is `<processed_dir>`
+    3. `ANNOTS_PATH` is `<annots_dir>`
+    4. `TASKS_JSON` is `<tasks_json_path>`
+5. Generate new train and test data with `./scripts/datagen_pipeline.sh`
 
 # TaskGrasp-Image
 

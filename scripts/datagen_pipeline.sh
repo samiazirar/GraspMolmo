@@ -8,24 +8,27 @@ ANNOTS_PATH=/weka/prior/abhayd/semantic-grasping-datasets/synthetic_annotations_
 TASKS_JSON=/weka/prior/abhayd/semantic-grasping-datasets/generated_tasks/0422_1700.json
 FORMAT=molmo
 
-python semantic_grasping_datagen/datagen/split_data.py \
+TRAIN_SCENES=10000
+TEST_SCENES=1000
+
+python graspmolmo/datagen/split_data.py \
     data_dir=${ASSETS_PATH} \
     out_dir=${DATASET_PATH}/splits
 
 # Train datagen
 echo "Generating train scenes"
-python semantic_grasping_datagen/datagen/datagen.py \
+python graspmolmo/datagen/datagen.py \
     out_dir=${DATASET_PATH}/scenes \
     data_dir=${ASSETS_PATH} \
     split_file=${DATASET_PATH}/splits/train.json \
-    n_samples=10000 \
+    n_samples=${TRAIN_SCENES} \
     "annotation_sources=[{type:directory,params:{dir:${ANNOTS_PATH}}}]"
 
 echo "Generating train observations"
-python semantic_grasping_datagen/datagen/generate_obs.py scene_dir=${DATASET_PATH}/scenes out_dir=${DATASET_PATH}/observations
+python graspmolmo/datagen/generate_obs.py scene_dir=${DATASET_PATH}/scenes out_dir=${DATASET_PATH}/observations
 
 echo "Matching tasks to grasps"
-python semantic_grasping_datagen/datagen/match_tasks_to_grasps_v2.py \
+python graspmolmo/datagen/match_tasks_to_grasps_v2.py \
     ${TASKS_JSON} \
     ${DATASET_PATH}/observations \
     ${DATASET_PATH}/task_point_v2 \
@@ -33,7 +36,7 @@ python semantic_grasping_datagen/datagen/match_tasks_to_grasps_v2.py \
     --retrieve
 
 echo "Packaging train data"
-python semantic_grasping_datagen/datagen/package_pointing_data.py \
+python graspmolmo/datagen/package_pointing_data.py \
     ${DATASET_PATH}/task_point_v2/matched_tasks.csv \
     ${DATASET_PATH}/observations \
     ${DATASET_PATH}/${FORMAT}_data_cot \
@@ -41,7 +44,7 @@ python semantic_grasping_datagen/datagen/package_pointing_data.py \
     --cot \
     --n-proc 32
 
-python semantic_grasping_datagen/datagen/package_pointing_data.py \
+python graspmolmo/datagen/package_pointing_data.py \
     ${DATASET_PATH}/task_point_v2/matched_tasks.csv \
     ${DATASET_PATH}/observations \
     ${DATASET_PATH}/${FORMAT}_data \
@@ -50,18 +53,18 @@ python semantic_grasping_datagen/datagen/package_pointing_data.py \
 
 # Test datagen
 echo "Generating test scenes"
-python semantic_grasping_datagen/datagen/datagen.py \
+python graspmolmo/datagen/datagen.py \
     out_dir=${DATASET_PATH}/scenes_test \
     data_dir=${ASSETS_PATH} \
     split_file=${DATASET_PATH}/splits/test.json \
-    n_samples=1000 \
+    n_samples=${TEST_SCENES} \
     "annotation_sources=[{type:directory,params:{dir:${ANNOTS_PATH}}}]"
 
 echo "Generating test observations"
-python semantic_grasping_datagen/datagen/generate_obs.py scene_dir=${DATASET_PATH}/scenes_test out_dir=${DATASET_PATH}/observations_test
+python graspmolmo/datagen/generate_obs.py scene_dir=${DATASET_PATH}/scenes_test out_dir=${DATASET_PATH}/observations_test
 
 echo "Matching tasks to grasps"
-python semantic_grasping_datagen/datagen/match_tasks_to_grasps_v2.py \
+python graspmolmo/datagen/match_tasks_to_grasps_v2.py \
     ${TASKS_JSON} \
     ${DATASET_PATH}/observations_test \
     ${DATASET_PATH}/task_point_v2_test \
@@ -69,7 +72,7 @@ python semantic_grasping_datagen/datagen/match_tasks_to_grasps_v2.py \
     --retrieve
 
 echo "Packaging test data"
-python semantic_grasping_datagen/datagen/package_pointing_data.py \
+python graspmolmo/datagen/package_pointing_data.py \
     ${DATASET_PATH}/task_point_v2_test/matched_tasks.csv \
     ${DATASET_PATH}/observations_test \
     ${DATASET_PATH}/${FORMAT}_data_cot_test \
@@ -77,7 +80,7 @@ python semantic_grasping_datagen/datagen/package_pointing_data.py \
     --cot \
     --n-proc 32
 
-python semantic_grasping_datagen/datagen/package_pointing_data.py \
+python graspmolmo/datagen/package_pointing_data.py \
     ${DATASET_PATH}/task_point_v2_test/matched_tasks.csv \
     ${DATASET_PATH}/observations_test \
     ${DATASET_PATH}/${FORMAT}_data_test \
