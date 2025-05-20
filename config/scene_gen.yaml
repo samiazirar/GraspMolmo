@@ -8,13 +8,9 @@ blacklist: asset_blacklist.txt
 split_file:  # null to use all data
 
 annotation_sources:
-  # - type: s3
-  #   params:
-  #     bucket_name: "prior-datasets"
-  #     annotation_prefix: "semantic-grasping/annotations-filtered/"
   - type: directory
     params:
-      dir: /annotations
+      dir: "???"
 
 datagen:
   # Room parameters

@@ -13,7 +13,7 @@ from graspmolmo.eval.utils import TaskGraspScanLibrary, img_to_pc
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--scan-dir", type=str, default="/net/nfs2.prior/abhayd/semantic-grasping/data/taskgrasp/scans")
+    parser.add_argument("--scan-dir", type=str, required=True)
     parser.add_argument("--gen-scene-dir", type=str)
     parser.add_argument("--overwrite", action="store_true")
     return parser.parse_args()
