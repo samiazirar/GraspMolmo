@@ -1,19 +1,22 @@
 from setuptools import setup, find_namespace_packages
 
 base_deps = [
+    "numpy~=1.26.4",
+    "pillow~=10.2.0",
+    "tqdm~=4.67.1"
+]
+
+datagen_deps = [
     "acronym_tools @ git+https://github.com/abhaybd/acronym.git",
     "boto3~=1.36.17",
     "fastapi~=0.115.7",
     "h5py~=3.12.1",
-    "numpy~=1.26.4",
     "open3d~=0.18.0",
     "openai~=1.64.0",
-    "pillow~=10.2.0",
     "pydantic~=2.10.5",
     "pyrender~=0.1.45",
     "requests~=2.32.3",
     "scipy~=1.14.1",
-    "tqdm~=4.67.1",
     "trimesh~=4.5.3",
     "types-boto3~=1.36.17",
     "types-boto3-s3~=1.36.15",
@@ -31,6 +34,14 @@ tg_deps = [
     "learning3d"
 ]
 
+infer_deps = [
+    "transformers~=4.52.4",
+    "torch~=2.0",
+    "torchvision~=0.22.0",
+    "tensorflow~=2.0",
+    "accelerate~=1.7.0"
+]
+
 setup(
     name="graspmolmo",
     version="0.1.0",
@@ -40,8 +51,10 @@ setup(
     python_requires=">=3.8",
     install_requires=base_deps,
     extras_require={
-        "taskgrasp_image": tg_deps,
-        "all": tg_deps,
+        "datagen": datagen_deps,
+        "taskgrasp_image": datagen_deps + tg_deps,
+        "infer": infer_deps,
+        "all": datagen_deps + tg_deps + infer_deps,
     },
     include_package_data=True,
     classifiers=[
