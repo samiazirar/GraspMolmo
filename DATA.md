@@ -1,11 +1,16 @@
 # PRISM
 
-The PRISM dataset is available for download:
+The PRISM dataset is available for download on [🤗 HuggingFace](https://huggingface.co/datasets/allenai/PRISM). Refer to the dataset page for relevant details.
+
+While the huggingface dataset contains rendered scenes and observations which are easier to use, we also supply the original 3D scenes for the sake of completeness.
+If desired, this can be used to regenerate observations, potentially with a different or more realistic renderer.
+
+This data can be downloaded here:
 - [PRISM-Train](https://pub-3e61ad92c7024712b84e4bf8658147f7.r2.dev/PRISM_train.tar)
 - [PRISM-Test](https://pub-3e61ad92c7024712b84e4bf8658147f7.r2.dev/PRISM_test.tar)
 - [Splits](https://pub-3e61ad92c7024712b84e4bf8658147f7.r2.dev/PRISM_splits.tar) (train/test split of each object instance in each class)
 
-If you want to generate new scenes, the following data is required:
+If you want to generate entirely new scenes, the following data is required:
 - [Grasp Descriptions](https://pub-3e61ad92c7024712b84e4bf8658147f7.r2.dev/annotations.tar.gz) (natural-language descriptions of each grasp)
 - [Tasks JSON](https://pub-3e61ad92c7024712b84e4bf8658147f7.r2.dev/tasks.json) (generated tasks and grasps that would accomplish them)
 
@@ -59,7 +64,7 @@ Each `scene.pkl` contains a dictionary with the following structure:
 
 ### Rendering observations
 
-Notably, this data does not include the rendered views, for the purposes of space-saving. These views can be rendered with:
+Notably, this data does not include the rendered views, which are available on HuggingFace. These views can also be rendered with:
 
 ```bash
 python graspmolmo/datagen/generate_obs.py scene_dir=<path_to_data> out_dir=<output_path>
