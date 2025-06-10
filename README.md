@@ -42,3 +42,17 @@ idx = gm.pred_grasp(rgb, point_cloud, task, grasps)
 
 print(f"Predicted grasp: {grasps[idx]}")
 ```
+
+## Citation
+
+```
+@misc{deshpande2025graspmolmo,
+      title={GraspMolmo: Generalizable Task-Oriented Grasping via Large-Scale Synthetic Data Generation}, 
+      author={Abhay Deshpande and Yuquan Deng and Arijit Ray and Jordi Salvador and Winson Han and Jiafei Duan and Kuo-Hao Zeng and Yuke Zhu and Ranjay Krishna and Rose Hendrix},
+      year={2025},
+      eprint={2505.13441},
+      archivePrefix={arXiv},
+      primaryClass={cs.RO},
+      url={https://arxiv.org/abs/2505.13441}, 
+}
+```
