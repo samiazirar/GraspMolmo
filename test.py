@@ -155,8 +155,7 @@ def main():
     rgb, pcd   = load_assets()
     grasps     = sample_grasps(pcd)
 
-    gm         = GraspMolmo(device="cuda" if torch.cuda.is_available()
-                            else "cpu")
+    gm         = GraspMolmo()
     point      = predict_point(gm, rgb, args.task)
     idx        = choose_grasp(grasps, point)
 
