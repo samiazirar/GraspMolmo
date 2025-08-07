@@ -36,7 +36,7 @@ IMAGE_URL    = (
 IMAGE_FILE   = ASSETS_DIR / "sample_rgb.jpg"
 
 PCLOUD_URL   = (
-    "https://raw.githubusercontent.com/isl-org/Open3D/master/"
+    "https://github.com/isl-org/Open3D/raw/main/"
     "examples/test_data/fragment.ply"
 )
 PCLOUD_FILE  = ASSETS_DIR / "sample_pointcloud.ply"
@@ -49,12 +49,33 @@ def _download(url: str, dst: Path):
     if dst.exists():
         return
     print(f"[INFO] downloading {dst.name} …")
-    urllib.request.urlretrieve(url, dst)
+    try:
+        urllib.request.urlretrieve(url, dst)
+    except Exception as e:
+        print(f"[WARNING] Failed to download {dst.name}: {e}")
+        return False
+    return True
+
+
+def create_dummy_pointcloud():
+    """Create a simple dummy point cloud if download fails"""
+    print("[INFO] Creating dummy point cloud...")
+    # Create a simple cube point cloud
+    points = []
+    for x in np.linspace(-0.5, 0.5, 10):
+        for y in np.linspace(-0.5, 0.5, 10):
+            for z in np.linspace(-0.5, 0.5, 10):
+                points.append([x, y, z])
+    
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(np.array(points))
+    o3d.io.write_point_cloud(str(PCLOUD_FILE), pcd)
 
 
 def fetch_assets():
     _download(IMAGE_URL,  IMAGE_FILE)
-    _download(PCLOUD_URL, PCLOUD_FILE)
+    if not _download(PCLOUD_URL, PCLOUD_FILE):
+        create_dummy_pointcloud()
 
 
 # ---------------------------------------------------------------------- #
