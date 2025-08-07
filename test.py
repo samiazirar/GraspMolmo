@@ -62,7 +62,8 @@ def main():
 
     # 3) Ask GraspMolmo which grasp meets the task
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    gm     = GraspMolmo(device=device)
+    print(f"Using device: {device}")
+    gm     = GraspMolmo()
     idx    = gm.pred_grasp(np.asarray(color_img), pcd, args.task, grasps)
 
     print(f"\nTask      : {args.task}")

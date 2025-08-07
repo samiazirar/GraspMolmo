@@ -2,7 +2,6 @@
 numpy>=1.23
 opencv-python>=4.10
 open3d>=0.19
-torch>=2.3          # GPU or CPU – wheels pick the right build automatically
 tqdm
 requests            # handy if you swap in your own HTTP downloads
 
