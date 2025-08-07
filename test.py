@@ -56,20 +56,22 @@ def main():
     # 1) Internet-fetched RGB-D sample
     color_img, depth_img, intr = fetch_sample_frame()
 
-    # 2) Build point cloud + dummy candidate grasps
+    # 2) Build point cloud + dummy grasps
     pcd    = rgbd_to_pointcloud(color_img, depth_img, intr)
     grasps = dummy_grasp_sampler(pcd)
 
-    # 3) Ask GraspMolmo which grasp meets the task
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    print(f"Using device: {device}")
-    gm     = GraspMolmo()
-    idx    = gm.pred_grasp(np.asarray(color_img), pcd, args.task, grasps)
+    # 3) Call GraspMolmo with camera intrinsics
+    K  = np.asarray(intr.intrinsic_matrix)      # (3,3) NumPy array
+    gm = GraspMolmo()
+    idx = gm.pred_grasp(np.asarray(color_img),  # RGB image (H,W,3) uint8
+                        pcd,                    # Open3D point cloud
+                        args.task,              # natural-language task
+                        grasps,                 # N×8 candidate grasps
+                        cam_K=K)                # NEW ➜ intrinsics!
 
-    print(f"\nTask      : {args.task}")
+    print(f"Task      : {args.task}")
     print(f"Best idx  : {idx}")
-    print(f"6-DoF pose: {grasps[idx]}\n")
-
+    print(f"6-DoF pose: {grasps[idx]}")
 
 if __name__ == "__main__":
     main()
