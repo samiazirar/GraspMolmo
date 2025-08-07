@@ -1,77 +1,88 @@
 #!/usr/bin/env python3
 """
-Uses GraspMolmo on an RGB-D frame that is fetched *automatically* from the
-internet (Open3D’s sample Redwood dataset).  No local sensors needed.
+Smoke-test for GraspMolmo on a single RGB-D frame.
+
+• Downloads a sample frame + intrinsics from Open3D’s Redwood living-room1 dataset.
+• Builds a point cloud and 64 dummy grasp proposals.
+• Calls GraspMolmo with a natural-language task and prints the winning grasp.
 """
 
 from pathlib import Path
-import argparse, random
-
+import argparse, warnings, os, random
 import numpy as np
-import open3d as o3d              # auto-downloads the sample when first used
-import cv2
+import open3d as o3d
 import torch
 
-from graspmolmo.inference.grasp_predictor import GraspMolmo
+# GraspMolmo helper ----------------------------------------------------------
+from graspmolmo.inference.grasp_predictor import GraspMolmo     # pip install graspmolmo
 
+# ---------- Fix #1: batch-dimension hot-patch (drop after upstream merge) ---
+def _add_batch_dim(func):
+    """Wrap GraspMolmo._pred so every tensor has an explicit batch dim."""
+    def wrapper(self, image, task, verbosity=0):
+        inputs = self.processor.process(images=image, text=task,
+                                        return_tensors="pt")
+        inputs = {k: (v.unsqueeze(0) if v.ndim == 1 else v)
+                  for k, v in inputs.items()}  # patch
+        return self.model.generate_from_batch(
+            inputs, self.gen_cfg, tokenizer=self.processor.tokenizer)
+    return wrapper
+# --------------------------------------------------------------------------- #
 
-# --------------------------------------------------------------------------- #
-#                        Step-by-step helper functions                         #
-# --------------------------------------------------------------------------- #
 def fetch_sample_frame():
-    """Download 1st RGB-D pair of Redwood living-room1 and its intrinsics."""
-    data = o3d.data.SampleRedwoodRGBDImages()         # triggers HTTP fetch
+    """1st RGB-D pair from Redwood living-room1 + intrinsics."""
+    data = o3d.data.SampleRedwoodRGBDImages()             # auto-downloads first time  [oai_citation:2‡Open3D](https://www.open3d.org/docs/latest/python_api/open3d.data.SampleRedwoodRGBDImages.html?utm_source=chatgpt.com)
     color = o3d.io.read_image(data.color_paths[0])
     depth = o3d.io.read_image(data.depth_paths[0])
-    Kjson = data.camera_intrinsic_path               # intrinsics in JSON
-    intr = o3d.io.read_pinhole_camera_intrinsic(Kjson)
-    return color, depth, intr
+    intr  = o3d.io.read_pinhole_camera_intrinsic(data.camera_intrinsic_path)
+    return color, depth, intr                              # intr holds 3×3 K  [oai_citation:3‡Open3D](https://www.open3d.org/docs/latest/python_api/open3d.camera.PinholeCameraIntrinsic.html?utm_source=chatgpt.com)
 
-
-def rgbd_to_pointcloud(color_o3d, depth_o3d, intr):
+def rgbd_to_pointcloud(color, depth, intr):
     rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(
-        color_o3d, depth_o3d, depth_scale=1000.0, depth_trunc=3.0,
-        convert_rgb_to_intensity=False)
+        color, depth, depth_scale=1000.0, depth_trunc=3.0,
+        convert_rgb_to_intensity=False)                    # Open3D RGB-D pipeline  [oai_citation:4‡Open3D](https://www.open3d.org/docs/latest/tutorial/geometry/rgbd_image.html?utm_source=chatgpt.com)
     return o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, intr)
 
-
 def dummy_grasp_sampler(pcd, n=64):
-    """Uniformly sample `n` points & make dummy parallel-jaw grasps."""
+    """Uniform random points with identity orientation + 6 cm width."""
     xyz   = np.asarray(pcd.points)
-    sel   = xyz[np.random.choice(len(xyz), size=min(n, len(xyz)), replace=False)]
-    quat  = np.tile([0, 0, 0, 1], (len(sel), 1))      # identity quaternion
-    width = np.full((len(sel), 1), 0.06)              # 6 cm
+    sel   = xyz[random.sample(range(len(xyz)), k=min(n, len(xyz)))]
+    quat  = np.tile([0, 0, 0, 1], (len(sel), 1))           # unit quaternion
+    width = np.full((len(sel), 1), 0.06)
     return np.hstack([sel, quat, width])
 
-
-# --------------------------------------------------------------------------- #
-#                                    main                                     #
-# --------------------------------------------------------------------------- #
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--task", default="grasp_it",
+    parser.add_argument("--task", default="pick up the yellow cup",
                         help="Natural-language instruction for the grasp")
     args = parser.parse_args()
 
-    # 1) Internet-fetched RGB-D sample
-    color_img, depth_img, intr = fetch_sample_frame()
+    # Silence TensorFlow duplicate-plugin spam (unrelated to PyTorch)  [oai_citation:5‡Stack Overflow](https://stackoverflow.com/questions/79096274/tensorflow-errors-cufft-cudnn-cublas-and-assertion-n-this-size-fail?utm_source=chatgpt.com) [oai_citation:6‡GitHub](https://github.com/tensorflow/tensorflow/issues/62075?utm_source=chatgpt.com)
+    os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
+    warnings.filterwarnings("ignore")
 
-    # 2) Build point cloud + dummy grasps
-    pcd    = rgbd_to_pointcloud(color_img, depth_img, intr)
+    # 1 Fetch RGB-D sample
+    color, depth, intr = fetch_sample_frame()
+
+    # 2 Build point cloud & candidate grasps
+    pcd    = rgbd_to_pointcloud(color, depth, intr)
     grasps = dummy_grasp_sampler(pcd)
 
-    # 3) Call GraspMolmo with camera intrinsics
-    K  = np.asarray(intr.intrinsic_matrix)      # (3,3) NumPy array
-    gm = GraspMolmo()
-    idx = gm.pred_grasp(np.asarray(color_img),  # RGB image (H,W,3) uint8
-                        pcd,                    # Open3D point cloud
-                        args.task,              # natural-language task
-                        grasps,                 # N×8 candidate grasps
-                        cam_K=K)                # NEW ➜ intrinsics!
+    # 3 Initialise GraspMolmo
+    gm = GraspMolmo()                                      # model card & paper  [oai_citation:7‡Hugging Face](https://huggingface.co/allenai/GraspMolmo?utm_source=chatgpt.com) [oai_citation:8‡arXiv](https://arxiv.org/html/2505.13441v1?utm_source=chatgpt.com)
+    if not hasattr(gm, "_patched"):                        # one-shot monkey-patch
+        gm._pred  = _add_batch_dim(gm._pred.__func__).__get__(gm, GraspMolmo)
+        gm._patched = True
 
-    print(f"Task      : {args.task}")
-    print(f"Best idx  : {idx}")
-    print(f"6-DoF pose: {grasps[idx]}")
+    # 4 Predict best grasp
+    K = np.asarray(intr.intrinsic_matrix)                  # 3×3 cam_K
+    idx = gm.pred_grasp(np.asarray(color), pcd,
+                        args.task, grasps, cam_K=K)        # Fix #2: pass cam_K
+
+    # 5 Report result
+    print(f"\nTask        : {args.task}")
+    print(f"Chosen index : {idx}")
+    print("6-DoF grasp  :", grasps[idx])
 
 if __name__ == "__main__":
     main()
